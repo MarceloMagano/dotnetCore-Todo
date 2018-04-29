@@ -21,5 +21,34 @@ namespace AspNetCoreTodo.Services
         {
             return await _context.Items.Where(x => x.IsDone == false).ToArrayAsync();
         }
+
+        public async Task<bool> AddItemAsync(NewTodoItemViewModel newItem)
+        {
+            TodoItem item = new TodoItem()
+            {
+                Id = Guid.NewGuid(),
+                IsDone = false,
+                Title = newItem.Title,
+                DueAt = DateTimeOffset.UtcNow.AddDays(3)
+            };
+
+            _context.Items.Add(item);
+
+            int saveResult = await _context.SaveChangesAsync();
+            return saveResult == 1;
+
+        }
+
+        public async Task<bool> MarkDoneAsync(Guid id)
+        {
+            TodoItem item = await _context.Items.Where(x => x.Id == id).SingleOrDefaultAsync();
+            if (item == null) return false;
+
+            item.IsDone = true;
+
+            var saveResult = await _context.SaveChangesAsync();
+            return saveResult == 1;
+
+        }
     }
 }
