@@ -17,19 +17,20 @@ namespace AspNetCoreTodo.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<TodoItem>> GetIncompleteItemsAsync()
+        public async Task<IEnumerable<TodoItem>> GetIncompleteItemsAsync(ApplicationUser user)
         {
-            return await _context.Items.Where(x => x.IsDone == false).ToArrayAsync();
+            return await _context.Items.Where(x => x.IsDone == false && x.OwnerId == user.Id).ToArrayAsync();
         }
 
-        public async Task<bool> AddItemAsync(NewTodoItemViewModel newItem)
+        public async Task<bool> AddItemAsync(NewTodoItemViewModel newItem, ApplicationUser user)
         {
             TodoItem item = new TodoItem()
             {
                 Id = Guid.NewGuid(),
                 IsDone = false,
                 Title = newItem.Title,
-                DueAt = DateTimeOffset.UtcNow.AddDays(3)
+                DueAt = DateTimeOffset.UtcNow.AddDays(3),
+                OwnerId = user.Id
             };
 
             _context.Items.Add(item);
@@ -39,9 +40,9 @@ namespace AspNetCoreTodo.Services
 
         }
 
-        public async Task<bool> MarkDoneAsync(Guid id)
+        public async Task<bool> MarkDoneAsync(Guid id, ApplicationUser user)
         {
-            TodoItem item = await _context.Items.Where(x => x.Id == id).SingleOrDefaultAsync();
+            TodoItem item = await _context.Items.Where(x => x.Id == id && x.OwnerId == user.Id).SingleOrDefaultAsync();
             if (item == null) return false;
 
             item.IsDone = true;
